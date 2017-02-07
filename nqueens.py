@@ -11,7 +11,7 @@ class Solver_8_queens:
     cross_p = 0.5       # corssingover probability
     mutation_p = 0.05   # mutation probability
     max_clashes =  28   
-    def __init__(self, pop_size=1000, cross_prob=0.11, mut_prob=0.05, desk_size=8):
+    def __init__(self, pop_size=500, cross_prob=0.7, mut_prob=0.1, desk_size=8):
         self.p_size = pop_size
         self.cross_p = cross_prob
         self.mutation_p = mut_prob
