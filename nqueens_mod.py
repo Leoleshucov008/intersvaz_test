@@ -11,8 +11,15 @@ class Solver_8_queens:
     cross_p = 0.5       # corssingover probability
     mutation_p = 0.05   # mutation probability
     max_clashes =  28 
+    cross_pts_count = 2
     selection = 'tournament' # 'ring' 
-    def __init__(self, pop_size=200, cross_prob=0.7, mut_prob=0.1, selection='tournament', desk_size=8):
+    def __init__(
+                self, pop_size=200, 
+                cross_prob=0.7,
+                mut_prob=0.1,
+                selection='tournament',
+                cross_point_count = 1,
+                desk_size=8):
         self.p_size = pop_size
         self.cross_p = cross_prob
         self.mutation_p = mut_prob
@@ -22,6 +29,10 @@ class Solver_8_queens:
         if selection != 'tournament' and selection != 'ring':
             raise BaseException('No valid selection type. Must be "tournament" or "ring"')
         self.selection = selection
+        if cross_point_count < 1 or cross_point_count > self.point_size * self.desk_size:
+            raise BaseException('Cross points count is out of range')
+        self.cross_pts_count = cross_point_count
+        
     def solve(self, min_fitness=0.9, max_epochs=100):
         best_fit=None
         epoch_num=None
@@ -98,10 +109,18 @@ class Solver_8_queens:
                 return i
         return len(probs) - 1
         
-    def one_point_crossing(self, a, b):
-        k = random.randrange(len(a) / 3) * 3 
-        return [a[0:k] + b[k: len(a)],b[0: k] + a[k: len(a)]]
-            
+    def mul_point_crossing(self, a, b):
+        size = self.desk_size * self.point_size
+        pts = [0] + random.sample(range(size), self.cross_pts_count) + [size]
+        pts.sort()
+        c1 = list()
+        c2 = list()
+        for i in range(self.cross_pts_count + 1):
+            old = list(c1)
+            c1 = c2 + a[pts[i]:pts[i+1]]
+            c2 = old + b[pts[i]:pts[i+1]]
+        return [c1, c2]
+    
     def generate_ppltn(self):
         '''generate start population'''
         self.ppltn = list()
@@ -116,6 +135,7 @@ class Solver_8_queens:
         except:
             pass
         return cell
+    
     def ring_selection_step(self):
         self.ppltn_indexes = list()        
         probs = self.get_ppltn_probs(self.ppltn);
@@ -145,7 +165,6 @@ class Solver_8_queens:
     
     def crossing_step(self):
         new_ppltn = list()   
-
         for i in range(self.p_size):
             a = random.randrange(len(self.ppltn_indexes))
             a = self.ppltn_indexes[a]
@@ -154,8 +173,7 @@ class Solver_8_queens:
             while a == b:
                 b = random.randrange(len(self.ppltn_indexes))
                 b = self.ppltn_indexes[b]            
-            offsprings = self.one_point_crossing(self.ppltn[a], self.ppltn[b])
-            new_ppltn = new_ppltn + offsprings
+            new_ppltn = new_ppltn + self.mul_point_crossing(self.ppltn[a], self.ppltn[b])
         self.ppltn = new_ppltn
 
     def mutation_step(self):
